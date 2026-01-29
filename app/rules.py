@@ -1,5 +1,3 @@
-# app/rules.py
-
 PHISHING_KEYWORDS = [
     "urgent",
     "verify",
@@ -14,10 +12,6 @@ PHISHING_KEYWORDS = [
 
 
 def rule_based_detector(text: str) -> dict:
-    """
-    Rule-based phishing detection using keyword analysis
-    """
-
     text = text.lower()
     score = 0
     matched_keywords = []
