@@ -1,5 +1,3 @@
-# app/main.py
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -8,7 +6,7 @@ from app.ai_model import ai_phishing_detector
 
 app = FastAPI(
     title="Phishing Detector API",
-    description="Hybrid phishing detection using rules + AI",
+    description="Hybrid phishing detection using rule-based and AI techniques",
     version="1.0"
 )
 
@@ -19,24 +17,18 @@ class TextInput(BaseModel):
 
 @app.post("/analyze")
 def analyze_text(data: TextInput):
-    """
-    Analyze text for phishing using rule-based and AI detection
-    """
-
     rule_result = rule_based_detector(data.text)
     ai_result = ai_phishing_detector(data.text)
 
-    # Combine results (simple weighted logic)
     final_score = (
         (rule_result["confidence"] * 0.6)
         + (ai_result["confidence"] * 0.4)
     )
 
     final_verdict = (
-        "phishing" if (
-            rule_result["verdict"] == "phishing"
-            or ai_result["verdict"] == "phishing"
-        )
+        "phishing"
+        if rule_result["verdict"] == "phishing"
+        or ai_result["verdict"] == "phishing"
         else "legitimate"
     )
 
