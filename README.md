@@ -1,32 +1,32 @@
 # Phishing Detector using AI and API
 
-## 📌 Project Overview
-This project implements a **hybrid phishing detection system** that combines:
+## 📖 Overview
+This project is a **hybrid phishing detection system** that combines:
 - Rule-based (human-defined) phishing detection
-- AI/NLP-based phishing classification
-- REST API for real-time analysis
+- AI-based phishing detection using NLP
+- A REST API for real-time analysis
 
-The goal is to detect phishing emails or messages using both traditional security heuristics and machine learning techniques.
+The system is designed to analyze emails or text messages and determine whether they are **phishing or legitimate**, along with a confidence score.
 
 ---
 
-## 🎯 Objectives
-- Detect phishing attempts using keyword and pattern analysis
+## 🎯 Project Objectives
+- Detect phishing attempts using heuristic rules
 - Enhance detection using AI-based natural language processing
-- Expose the detection system via an API
-- Build the project in a secure, isolated environment (Kali Linux VM)
+- Expose detection logic via a RESTful API
+- Build a modular and extensible security tool
 
 ---
 
-## 🧠 Architecture
-Client
-|
-|--> API (FastAPI)
+## 🧠 Detection Architecture
+Input Text
 |
 |--> Rule-Based Detector
 |--> AI-Based NLP Detector
 |
-|--> Final Verdict + Confidence Score
+|--> Final Decision Engine
+|
+--> Verdict + Confidence Score
 
 
 ---
@@ -34,14 +34,45 @@ Client
 ## 🛠️ Technologies Used
 - Python 3
 - FastAPI
-- Scikit-learn / Transformers
+- Transformers (NLP)
+- PyTorch
+- Scikit-learn
 - Kali Linux
-- GitHub for version control
+- GitHub
 
 ---
 
-## ⚠️ Disclaimer
-This project is for **educational and security research purposes only**.
+## 📂 Project Structure
+Phishing-Detector-using-AI-and-with-API/
+├── requirements.txt
+└── app/
+├── init.py
+├── main.py
+├── rules.py
+└── ai_model.py
+
+
 
 ---
 
+## 🚀 API Endpoint
+### POST `/analyze`
+
+**Request Body**
+```json
+{
+  "text": "Your account is suspended. Verify immediately."
+}
+
+Response
+{
+  "final_verdict": "phishing",
+  "final_score": 0.86,
+  "rule_based": {...},
+  "ai_based": {...}
+}
+
+
+⚠️ Disclaimer
+
+This project is intended for educational and security research purposes only.
