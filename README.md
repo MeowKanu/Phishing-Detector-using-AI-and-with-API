@@ -19,3 +19,29 @@ The goal is to detect phishing emails or messages using both traditional securit
 ---
 
 ## 🧠 Architecture
+Client
+|
+|--> API (FastAPI)
+|
+|--> Rule-Based Detector
+|--> AI-Based NLP Detector
+|
+|--> Final Verdict + Confidence Score
+
+
+---
+
+## 🛠️ Technologies Used
+- Python 3
+- FastAPI
+- Scikit-learn / Transformers
+- Kali Linux
+- GitHub for version control
+
+---
+
+## ⚠️ Disclaimer
+This project is for **educational and security research purposes only**.
+
+---
+
