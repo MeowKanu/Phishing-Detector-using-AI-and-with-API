@@ -1,3 +1,4 @@
+import re
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -6,8 +7,8 @@ from app.ai_model import ai_phishing_detector
 
 app = FastAPI(
     title="Phishing Detector API",
-    description="Hybrid phishing detection using rules + AI",
-    version="1.1"
+    description="Hybrid phishing detection using rules, AI, and URL analysis",
+    version="1.2"
 )
 
 
@@ -24,28 +25,55 @@ def risk_level(score: float) -> str:
         return "low"
 
 
+def extract_urls(text: str):
+    url_pattern = r"(https?://[^\s]+)"
+    return re.findall(url_pattern, text.lower())
+
+
+def analyze_urls(urls: list) -> dict:
+    suspicious = []
+
+    for url in urls:
+        if any([
+            "bit.ly" in url,
+            "tinyurl" in url,
+            re.search(r"https?://\d+\.\d+\.\d+\.\d+", url),
+            url.count("-") > 3,
+            not url.startswith("https")
+        ]):
+            suspicious.append(url)
+
+    confidence = min(len(suspicious) * 0.3, 1.0)
+
+    return {
+        "urls_found": urls,
+        "suspicious_urls": suspicious,
+        "confidence": round(confidence, 2)
+    }
+
+
 @app.post("/analyze")
 def analyze_text(data: TextInput):
     rule_result = rule_based_detector(data.text)
     ai_result = ai_phishing_detector(data.text)
 
-    # weighted fusion
+    urls = extract_urls(data.text)
+    url_result = analyze_urls(urls)
+
     final_score = round(
-        (rule_result["confidence"] * 0.6)
-        + (ai_result["confidence"] * 0.4),
+        (rule_result["confidence"] * 0.5)
+        + (ai_result["confidence"] * 0.3)
+        + (url_result["confidence"] * 0.2),
         2
     )
 
-    final_verdict = (
-        "phishing"
-        if final_score >= 0.5
-        else "legitimate"
-    )
+    final_verdict = "phishing" if final_score >= 0.5 else "legitimate"
 
     return {
         "final_verdict": final_verdict,
         "risk_level": risk_level(final_score),
         "final_score": final_score,
         "rule_based": rule_result,
-        "ai_based": ai_result
+        "ai_based": ai_result,
+        "url_analysis": url_result
     }
