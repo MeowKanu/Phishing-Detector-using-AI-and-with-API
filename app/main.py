@@ -16,8 +16,8 @@ logging.basicConfig(
 
 app = FastAPI(
     title="Phishing Detector API",
-    description="Hybrid phishing detection using rules, AI, URL analysis, and logging",
-    version="1.3"
+    description="Explainable hybrid phishing detection using rules, AI, and URL analysis",
+    version="1.4"
 )
 
 
@@ -79,11 +79,27 @@ def analyze_text(data: TextInput):
     final_verdict = "phishing" if final_score >= 0.5 else "legitimate"
     risk = risk_level(final_score)
 
-    # Log event
+    explanation = {
+        "rule_based_reason": (
+            "Matched phishing keywords"
+            if rule_result["verdict"] == "phishing"
+            else "No critical phishing keywords detected"
+        ),
+        "ai_reason": (
+            "Language shows urgency or threat patterns"
+            if ai_result["verdict"] == "phishing"
+            else "Language appears normal"
+        ),
+        "url_reason": (
+            "Suspicious or shortened URLs detected"
+            if url_result["confidence"] > 0
+            else "No suspicious URLs detected"
+        )
+    }
+
     logging.info(
         f"verdict={final_verdict} | risk={risk} | score={final_score} | "
-        f"rules={rule_result['confidence']} | ai={ai_result['confidence']} | "
-        f"urls={len(urls)}"
+        f"explain={explanation}"
     )
 
     return {
@@ -91,6 +107,7 @@ def analyze_text(data: TextInput):
         "final_verdict": final_verdict,
         "risk_level": risk,
         "final_score": final_score,
+        "explanation": explanation,
         "rule_based": rule_result,
         "ai_based": ai_result,
         "url_analysis": url_result
