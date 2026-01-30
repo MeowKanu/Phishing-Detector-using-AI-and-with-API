@@ -7,49 +7,49 @@ from pydantic import BaseModel
 from app.rules import rule_based_detector
 from app.ai_model import ai_phishing_detector
 
-# Logging setup
+# ---------------- Logging ----------------
 logging.basicConfig(
     filename="phishing_detector.log",
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
 
+# ---------------- App ----------------
 app = FastAPI(
     title="Phishing Detector API",
-    description="Explainable hybrid phishing detection using rules, AI, and URL analysis",
-    version="1.4"
+    description="Hybrid, explainable phishing detection using Rules + AI + URL analysis",
+    version="FINAL"
 )
 
-
+# ---------------- Models ----------------
 class TextInput(BaseModel):
     text: str
 
-
+# ---------------- Helpers ----------------
 def risk_level(score: float) -> str:
     if score >= 0.75:
         return "high"
     elif score >= 0.4:
         return "medium"
-    else:
-        return "low"
+    return "low"
 
 
 def extract_urls(text: str):
-    url_pattern = r"(https?://[^\s]+)"
-    return re.findall(url_pattern, text.lower())
+    pattern = r"(https?://[^\s]+)"
+    return re.findall(pattern, text.lower())
 
 
-def analyze_urls(urls: list) -> dict:
+def analyze_urls(urls):
     suspicious = []
 
     for url in urls:
-        if any([
-            "bit.ly" in url,
-            "tinyurl" in url,
-            re.search(r"https?://\d+\.\d+\.\d+\.\d+", url),
-            url.count("-") > 3,
-            not url.startswith("https")
-        ]):
+        if (
+            "bit.ly" in url
+            or "tinyurl" in url
+            or re.search(r"https?://\d+\.\d+\.\d+\.\d+", url)
+            or url.count("-") > 3
+            or not url.startswith("https")
+        ):
             suspicious.append(url)
 
     confidence = min(len(suspicious) * 0.3, 1.0)
@@ -60,7 +60,7 @@ def analyze_urls(urls: list) -> dict:
         "confidence": round(confidence, 2)
     }
 
-
+# ---------------- API ----------------
 @app.post("/analyze")
 def analyze_text(data: TextInput):
     rule_result = rule_based_detector(data.text)
@@ -80,18 +80,18 @@ def analyze_text(data: TextInput):
     risk = risk_level(final_score)
 
     explanation = {
-        "rule_based_reason": (
+        "rule_based": (
             "Matched phishing keywords"
             if rule_result["verdict"] == "phishing"
             else "No critical phishing keywords detected"
         ),
-        "ai_reason": (
-            "Language shows urgency or threat patterns"
+        "ai_based": (
+            "Urgent or threatening language detected"
             if ai_result["verdict"] == "phishing"
             else "Language appears normal"
         ),
-        "url_reason": (
-            "Suspicious or shortened URLs detected"
+        "url_based": (
+            "Suspicious or obfuscated URLs detected"
             if url_result["confidence"] > 0
             else "No suspicious URLs detected"
         )
@@ -99,7 +99,8 @@ def analyze_text(data: TextInput):
 
     logging.info(
         f"verdict={final_verdict} | risk={risk} | score={final_score} | "
-        f"explain={explanation}"
+        f"rules={rule_result['confidence']} | ai={ai_result['confidence']} | "
+        f"urls={len(urls)}"
     )
 
     return {
