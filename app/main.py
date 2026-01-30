@@ -1,14 +1,23 @@
 import re
+import logging
+from datetime import datetime
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 from app.rules import rule_based_detector
 from app.ai_model import ai_phishing_detector
 
+# Logging setup
+logging.basicConfig(
+    filename="phishing_detector.log",
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+)
+
 app = FastAPI(
     title="Phishing Detector API",
-    description="Hybrid phishing detection using rules, AI, and URL analysis",
-    version="1.2"
+    description="Hybrid phishing detection using rules, AI, URL analysis, and logging",
+    version="1.3"
 )
 
 
@@ -68,10 +77,19 @@ def analyze_text(data: TextInput):
     )
 
     final_verdict = "phishing" if final_score >= 0.5 else "legitimate"
+    risk = risk_level(final_score)
+
+    # Log event
+    logging.info(
+        f"verdict={final_verdict} | risk={risk} | score={final_score} | "
+        f"rules={rule_result['confidence']} | ai={ai_result['confidence']} | "
+        f"urls={len(urls)}"
+    )
 
     return {
+        "timestamp": datetime.utcnow().isoformat(),
         "final_verdict": final_verdict,
-        "risk_level": risk_level(final_score),
+        "risk_level": risk,
         "final_score": final_score,
         "rule_based": rule_result,
         "ai_based": ai_result,
